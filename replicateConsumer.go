@@ -1,21 +1,19 @@
 package goplicate
 
 import (
-	// "bufio"
+	"bufio"
 	"bytes"
 	"encoding/json"
-	// "go/scanner"
 	"net/http"
 )
 
-type ReplicateConsumer[Input any, Output any] struct {
+type ReplicateConsumer[Input, Output any] struct {
 	ApiKey              string
 	CreatePredictionUrl string
 	Version             string
 	Stream              bool
 	PredictionRequest   *predictionRequest[Input]
 	PredictionResponse  *predictionResponse[Input]
-
 	ExtractDataFromOutput func(output *Output) (string, error)
 }
 
@@ -74,7 +72,7 @@ func (r *ReplicateConsumer[Input, Output]) GetOutput(outputUrl string, outputCha
 	outputChan <- outputStr
 }
 
-func (r *ReplicateConsumer[Input, Output]) GetStreamOutput(outputUrl string, outputChan chan string, errorChan chan error, stringFormatter func (string) (string, error)) {
+func (r *ReplicateConsumer[Input, Output]) GetStreamOutput(outputUrl string, outputChan chan string, errorChan chan error, doneEventName, outputEventName, errorEventName string) {
 	request, err := http.NewRequest("GET", outputUrl, nil)
 	if err != nil {
 		errorChan <- err
@@ -88,21 +86,15 @@ func (r *ReplicateConsumer[Input, Output]) GetStreamOutput(outputUrl string, out
 		errorChan <- err
 		return
 	}
-	defer func ()  {
+	defer func() {
 		response.Body.Close()
 		close(outputChan)
 		close(errorChan)
 	}()
 
-	// scanner := bufio.NewScanner(response.Body)
-	// for {
-	// 	data, err := stringFormatter(string(scanner.Bytes()))
-	// 	if err ==  {
-			
-	// 	}
-	// }
+	scanner := bufio.NewScanner(response.Body)
+	doubleNewLineSseScanner(scanner, outputChan, errorChan, doneEventName, outputEventName, errorEventName)
 }
-
 type predictionRequest[Input any] struct {
 	Version string `json:"version,omitempty"`
 	Stream  bool   `json:"stream,omitempty"`
@@ -124,8 +116,4 @@ type predictionResponse[Input any] struct {
 		Get    string `json:"get"`
 		Stream string `json:"stream"`
 	} `json:"urls"`
-}
-
-func main() {
-
 }
