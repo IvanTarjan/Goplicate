@@ -10,10 +10,10 @@ import (
 )
 
 type ReplicateStreamConsumer[Input any] struct {
-	ApiKey                string
-	CreatePredictionUrl   string
-	Version               string
-	PredictionRequest     *predictionRequest[Input]
+	ApiKey                                         string
+	CreatePredictionUrl                            string
+	Version                                        string
+	PredictionRequest                              *predictionRequest[Input]
 	DoneEventName, OutputEventName, ErrorEventName string
 }
 
@@ -27,9 +27,9 @@ func NewReplicateStreamConsumer[Input any](apiKey, createPredictionUrl, version 
 			Stream:  true,
 			Input:   baseInput,
 		},
-		DoneEventName:    doneEventName,
-		OutputEventName:  outputEventName,
-		ErrorEventName:   errorEventName,
+		DoneEventName:   doneEventName,
+		OutputEventName: outputEventName,
+		ErrorEventName:  errorEventName,
 	}
 }
 
@@ -71,7 +71,7 @@ func (r *ReplicateStreamConsumer[Input]) GetStreamOutput(outputUrl string, outpu
 		return
 	}
 	request.Header.Set("Authorization", "Bearer "+r.ApiKey)
-	request.Header.Set("Content-Type", "text/event-stream")
+	request.Header.Set("Accept", "text/event-stream")
 	request.Header.Set("Cache-Control", "no-store")
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -90,7 +90,6 @@ func (r *ReplicateStreamConsumer[Input]) GetStreamOutput(outputUrl string, outpu
 
 type serverSentEvent struct {
 	Event string `json:"event"`
-	// Id string `json:"id"`
 	Data string `json:"data"`
 }
 
@@ -103,9 +102,6 @@ func doubleNewLineSseScanner(scanner *bufio.Scanner, dataChan chan string, error
 			if strings.HasPrefix(line, "event: ") {
 				event.Event = line[7:]
 			}
-			// if strings.HasPrefix(line, "id: ") {
-			// 	event.Id = line[4:]
-			// }
 			if strings.HasPrefix(line, "data: ") {
 				event.Data += line[6:]
 			}
