@@ -96,7 +96,7 @@ type serverSentEvent struct {
 func doubleNewLineSseScanner(scanner *bufio.Scanner, dataChan chan string, errorChan chan error, doneEventName, outputEventName, errorEventName string) {
 	scanner.Split(ScanDoubleNewLine)
 	for scanner.Scan() {
-		lines := strings.Split(scanner.Text()[1:], "\n")
+		lines := strings.Split(string(scanner.Bytes()[1:]), "\n")
 		event := serverSentEvent{}
 		for _, line := range lines {
 			if strings.HasPrefix(line, "event: ") {
