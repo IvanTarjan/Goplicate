@@ -12,4 +12,4 @@ goplicate is a Go package designed to interact with the Replicate API, enabling 
 
 To install the goplicate package, use:
 
-  go get github.com/IvanTarjan/Goplicate
+    go get github.com/IvanTarjan/Goplicate
