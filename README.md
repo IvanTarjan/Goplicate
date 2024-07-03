@@ -18,7 +18,7 @@ To install the goplicate package, use:
 
 Usage example making requests to the llama-2-13b model:
 
-    input := llama213b.NewLlama2_13bDefaultRequest("Explain to me how to use the llama2 13b model to the best of my knowledge <Your prompt>", "You are a helpful, respectful and honest assistant. (<Your sysprompt>")
+    input := llama213b.NewLlama2_13bDefaultRequest("Explain to me how to use the llama2 13b model to the best of my knowledge <Your prompt>", "You are a helpful, respectful and honest assistant. <Your sysprompt>")
 	llama2Consumer := llama213b.NewLlama2_13bConsumer("<Your Api Key>", input)
 	predictionResponse, err := llama2Consumer.CreatePrediction(func(input llama213b.Llama2_13bInput) llama213b.Llama2_13bInput { return input })
 	if err != nil {
@@ -35,7 +35,38 @@ Usage example making requests to the llama-2-13b model:
 		fmt.Println(err)
 		return
 	}
-    
+
+Usage example making stream requests to the llama-2-13b model:
+
+ 	input := llama213b.NewLlama2_13bDefaultRequest("Explain to me how to use the llama2 13b model to the best of my knowledge <Your prompt>", "You are a helpful, respectful and honest assistant. (<Your sysprompt>")
+	llama2StreamConsumer := llama213b.NewLlama2_13bStreamConsumer("<Your Api Key>", input)
+	predictionStreamResponse, err := llama2StreamConsumer.CreatePrediction(func(input llama213b.Llama2_13bInput) llama213b.Llama2_13bInput {return input})
+	if err != nil {
+		panic(err)
+	}
+
+	dataChan := make(chan string)
+	errChan := make(chan error)
+	go llama2StreamConsumer.GetStreamOutput(predictionStreamResponse.Urls.Stream, dataChan, errChan)
+
+	isRunning := true
+	for isRunning{
+		select {
+		case data, ok := <-dataChan:
+			if !ok {
+				isRunning = false
+				break
+			}
+			fmt.Print(data)
+		case err, ok := <-errChan:
+			if !ok {
+				isRunning = false
+				break
+			}
+			fmt.Println(err)
+			return
+		}
+	}
 
  ## Implementing other models
 
