@@ -1,9 +1,6 @@
-package models
+package llama213b
 
 import (
-	"errors"
-	"strings"
-
 	goplicate "github.com/IvanTarjan/Goplicate"
 )
 
@@ -18,28 +15,8 @@ type Llama2_13bInput struct {
 	Prompt_template  string  `json:"prompt_template"`
 	Presence_penalty int     `json:"presence_penalty"`
 }
-type Llama2_13bOutput struct {
-	Completed_at string          `json:"completed_at"`
-	Created_at   string          `json:"created_at"`
-	Data_removed bool            `json:"data_removed"`
-	Error        string          `json:"error"`
-	Id           string          `json:"id"`
-	Input        Llama2_13bInput `json:"input"`
-	Logs         string          `json:"logs"`
-	Metrics      struct {
-		Predict_time float64 `json:"predict_time"`
-		Total_time   float64 `json:"total_time"`
-	} `json:"metrics"`
-	Output     []string `json:"output"`
-	Started_at string   `json:"started_at"`
-	Status     string   `json:"status"`
-	Urls       struct {
-		Get    string `json:"get"`
-		Cancel string `json:"cancel"`
-	} `json:"urls"`
-	Version string `json:"version"`
-}
 
+// NewLlama2_13bDefaultRequest creates a request with the default values except from the prompt and sysprompt to ease the use of the package.
 func NewLlama2_13bDefaultRequest(prompt, sysprompt string) Llama2_13bInput {
 	return Llama2_13bInput{
 		0,
@@ -66,20 +43,13 @@ func NewLlama2_13bStreamConsumer(apiKey string, input Llama2_13bInput) *goplicat
 	)
 }
 
-func NewLlama2_13bConsumer(apiKey string, input Llama2_13bInput) *goplicate.ReplicateConsumer[Llama2_13bInput, Llama2_13bOutput] {
+func NewLlama2_13bConsumer(apiKey string, input Llama2_13bInput) *goplicate.ReplicateConsumer[Llama2_13bInput, goplicate.DefaultOutput[Llama2_13bInput]] {
 	return goplicate.NewReplicateConsumer(
 		apiKey,
 		"https://api.replicate.com/v1/models/meta/llama-2-13b-chat/predictions",
 		"",
 		input,
-		func(output *Llama2_13bOutput) (string, error) {
-			if output.Error != "" {
-				return "", errors.New(output.Error)
-			}
-			return strings.Join(output.Output, ""), nil
-		},
-		func(output *Llama2_13bOutput) bool {
-			return output.Status == "succeeded"
-		},
+		goplicate.DefaultGetOutput[Llama2_13bInput],
+		goplicate.DefaultCheckStatusFinished[Llama2_13bInput],
 	)
 }
